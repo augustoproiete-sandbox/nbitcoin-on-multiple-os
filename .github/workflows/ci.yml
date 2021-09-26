@@ -1,0 +1,52 @@
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - "feature/**"
+      - "release/**"
+      - "hotfix/**"
+    tags:
+      - "*.*.*"
+    paths-ignore:
+      - "README.md"
+
+  pull_request:
+
+  workflow_dispatch:
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  run:
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - os: ubuntu-18.04
+            build: ./run.sh
+          - os: ubuntu-20.04
+            build: ./run.sh
+          - os: windows-2019
+            build: ./run.cmd
+          - os: windows-2022
+            build: ./run.cmd
+          - os: macos-10.15
+            build: ./run.sh
+    name: ${{ matrix.job.os }}
+    runs-on: ${{ matrix.job.os }}
+    steps:
+      - name: Setup net5.0
+        uses: actions/setup-dotnet@v1.8.2
+        with:
+          dotnet-version: "5.0.401"
+      - name: Run dotnet --info
+        run: dotnet --info
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+      - name: Build
+        run: ${{ matrix.job.build }}
